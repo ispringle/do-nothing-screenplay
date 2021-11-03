@@ -1,0 +1,33 @@
+global_context:
+  username: "Bob"
+script:
+- name: Create SSH Keypair
+  steps:
+  - "Run:"
+  - "ssh-keygen -t rsa -f ~/{{username}}"
+  - "await"
+- name: Git Commit
+  steps:
+  - "Copy ~/new_key.pub into the `user_keys` Git repository, then run:"
+  - "git commit {{username}}"
+  - "git push"
+  - "await"
+- name: Wait for build
+  context:
+    url: "http://example.com/builds/user_keys"
+  steps:
+  - "Wait for build job at {{url}}"
+  - "await"
+- name: Retrieve user email
+  context:
+    url: "http://example.com/directory"
+  steps:
+  - "Go to {{url}}"
+  - prompt: "Find the email address for user {{username}}:"
+    context_key: "user_email"
+- name: Send private key
+  steps:
+  - "Go to 1Password"
+  - "Pate the contents of ~/new_key into a new document"
+  - "Share the document with {{user_email}}"
+  - "await"
